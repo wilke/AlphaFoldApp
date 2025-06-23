@@ -1,0 +1,209 @@
+# BV-BRC Configuration for AlphaFold Service
+service:
+  id: "AlphaFold"
+  category: "structural_biology"
+  gui_enabled: true
+  public: true
+  description: "AlphaFold predicts a protein's 3D structure from its amino acid sequence using deep learning"
+
+parameters:
+  input_fasta:
+    bvbrc_type: "wsid"
+    widget: "workspace_file_selector"
+    filter: ["*.fasta", "*.fa", "*.fas"]
+    required: true
+    description: "FASTA file containing protein sequence(s) to predict"
+    
+  model_preset:
+    bvbrc_type: "enum"
+    widget: "dropdown"
+    options:
+      - value: "monomer"
+        label: "Monomer (fastest, single chain)"
+      - value: "monomer_ptm"
+        label: "Monomer with confidence scores"
+      - value: "monomer_casp14"
+        label: "Monomer CASP14 (8x ensemble, slow)"
+      - value: "multimer"
+        label: "Multimer (protein complexes)"
+    default: "monomer"
+    description: "Choose the AlphaFold model configuration"
+    
+  db_preset:
+    bvbrc_type: "enum"
+    widget: "dropdown"
+    options:
+      - value: "full_dbs"
+        label: "Full databases (most accurate)"
+      - value: "reduced_dbs"
+        label: "Reduced databases (faster)"
+    default: "full_dbs"
+    description: "Choose database configuration for MSA generation"
+    
+  max_template_date:
+    bvbrc_type: "string"
+    widget: "textbox"
+    required: false
+    default: "2022-01-01"
+    description: "Latest template release date to consider (YYYY-MM-DD)"
+    placeholder: "2022-01-01"
+    
+  models_to_relax:
+    bvbrc_type: "enum"
+    widget: "dropdown"
+    options:
+      - value: "best"
+        label: "Best model only (recommended)"
+      - value: "all"
+        label: "All models (slow)"
+      - value: "none"
+        label: "No relaxation (fast)"
+    default: "best"
+    description: "Which predicted models to run energy minimization on"
+    
+  num_multimer_predictions:
+    bvbrc_type: "int"
+    widget: "numeric"
+    min: 1
+    max: 25
+    default: 5
+    description: "Number of predictions per model for multimer (only used with multimer preset)"
+    conditional:
+      show_if: "model_preset == 'multimer'"
+    
+  use_gpu_relax:
+    bvbrc_type: "bool"
+    widget: "checkbox"
+    default: true
+    description: "Enable GPU acceleration for structure relaxation (if available)"
+    
+  use_precomputed_msas:
+    bvbrc_type: "bool"
+    widget: "checkbox"
+    default: false
+    description: "Reuse MSAs from previous runs (faster for parameter testing)"
+    
+  random_seed:
+    bvbrc_type: "int"
+    widget: "numeric"
+    min: 1
+    max: 2147483647
+    required: false
+    description: "Random seed for reproducibility (optional)"
+
+# Resource estimation configuration
+resources:
+  estimation_strategy: "input_size_based"
+  cpu_base: 8
+  cpu_per_gb_input: 4
+  cpu_max: 32
+  memory_base: "64G"
+  memory_per_gb_input: "8G"
+  memory_max: "256G"
+  runtime_base: 7200  # 2 hours
+  runtime_per_gb_input: 3600  # 1 hour per GB
+  runtime_max: 86400  # 24 hours
+  
+  # Tool-specific resource adjustments
+  adjustments:
+    multimer:
+      cpu_multiplier: 1.5
+      memory_multiplier: 1.5
+      runtime_multiplier: 2.0
+    casp14:
+      cpu_multiplier: 1.0
+      memory_multiplier: 1.0
+      runtime_multiplier: 8.0  # 8x ensemble
+    reduced_dbs:
+      runtime_multiplier: 0.5  # Faster with reduced databases
+
+# Testing configuration
+testing:
+  sample_data:
+    - name: "small_monomer_test"
+      description: "Small single-chain protein (fast test)"
+      input_fasta: "/test_data/small_protein.fasta"
+      model_preset: "monomer"
+      db_preset: "reduced_dbs"
+      models_to_relax: "none"
+      use_gpu_relax: false
+      expected_outputs:
+        - "ranked_0.pdb"
+        - "timings.json"
+        - "ranking_debug.json"
+      expected_runtime: 1800  # 30 minutes
+      
+    - name: "medium_monomer_ptm_test"
+      description: "Medium protein with confidence scores"
+      input_fasta: "/test_data/medium_protein.fasta"
+      model_preset: "monomer_ptm"
+      db_preset: "full_dbs"
+      models_to_relax: "best"
+      use_gpu_relax: true
+      expected_outputs:
+        - "ranked_0.pdb"
+        - "relaxed_model_1.pdb"
+        - "result_model_1.pkl"
+        - "timings.json"
+      expected_runtime: 14400  # 4 hours
+
+# GUI form layout configuration
+gui_generation:
+  form_layout:
+    sections:
+      - title: "Input Data"
+        description: "Select protein sequence file"
+        parameters: ["input_fasta"]
+        
+      - title: "Model Configuration"
+        description: "Choose AlphaFold model and database settings"
+        parameters: ["model_preset", "db_preset", "max_template_date"]
+        
+      - title: "Processing Options"
+        description: "Configure prediction and relaxation settings"
+        parameters: ["models_to_relax", "num_multimer_predictions", "use_gpu_relax"]
+        
+      - title: "Advanced Options"
+        description: "Advanced configuration options"
+        collapsed: true
+        parameters: ["use_precomputed_msas", "random_seed"]
+        
+  validation_rules:
+    cross_parameter:
+      - rule: "multimer_predictions_with_multimer"
+        condition: "model_preset != 'multimer'"
+        requirement: "num_multimer_predictions is ignored"
+        message: "Multimer predictions parameter only applies to multimer model preset"
+
+# Output file organization
+output_organization:
+  primary_outputs:
+    - name: "Ranked Structures"
+      pattern: "ranked_*.pdb"
+      description: "Final predicted structures ordered by confidence"
+      
+    - name: "Relaxed Structures" 
+      pattern: "relaxed_model_*.pdb"
+      description: "Energy-minimized structures (if relaxation enabled)"
+      
+    - name: "Raw Model Results"
+      pattern: "result_model_*.pkl"
+      description: "Complete model outputs including confidence metrics"
+      
+  secondary_outputs:
+    - name: "Confidence Scores"
+      pattern: "ranking_debug.json"
+      description: "pLDDT scores used for structure ranking"
+      
+    - name: "Performance Timing"
+      pattern: "timings.json"
+      description: "Runtime statistics for each prediction stage"
+      
+    - name: "Input Features"
+      pattern: "features.pkl"
+      description: "Processed input features used by the models"
+      
+  temp_files:
+    - pattern: "msas/*"
+      description: "Multiple sequence alignment files"
+      cleanup: false  # Keep MSAs for potential reuse
