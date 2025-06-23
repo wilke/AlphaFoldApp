@@ -1,21 +1,43 @@
-# AlphaFold Service
+# AlphaFoldV2 Service
 
 ## Description
 AlphaFold predicts a protein's 3D structure from its amino acid sequence using deep learning
 
+## BV-BRC Development Structure
+
+This module follows the standard BV-BRC dev container structure:
+- `Makefile` – fits into the dev container build plan
+- `lib/` – library code directory
+- `scripts/` – user level programs
+- `service-scripts/` – service-side programs
+- `app_specs/` – BV-BRC application specifications
+
+## Setup in BV-BRC Environment
+
+```bash
+cd ${KB_TOP}/modules/AlphaFoldV2
+source ${KB_TOP}/user-env.sh
+make
+```
+
 ## Usage
+
+### Development Testing
 ```bash
-App-AlphaFold [job_id] app_specs/AlphaFold.json params.json
+./service-scripts/App-AlphaFoldV2.pl --help
+./service-scripts/App-AlphaFoldV2.pl xx app_specs/AlphaFoldV2.json tests/test_case_1/params.json
 ```
 
-### Help
+### Production Deployment
 ```bash
-App-AlphaFold --help
+make deploy-service  # Deploy service components
+make deploy-specs    # Deploy app specifications
 ```
 
-### Test Run
+### Testing Targets
 ```bash
-App-AlphaFold xx app_specs/AlphaFold.json tests/test_case_1/params.json
+make test-service    # Test the generated service
+make help-service    # Show service-specific help
 ```
 
 ## Parameters
@@ -41,52 +63,58 @@ App-AlphaFold xx app_specs/AlphaFold.json tests/test_case_1/params.json
 - **output_path** (`folder`): Path to which the output will be written
 - **output_file** (`wsid`): Basename for generated output files
 
-## Input/Output
-
-### Input Files
-- FASTQ sequencing files
-- Configuration parameters via JSON
-
-### Output Files
-- Analysis results in workspace output folder
-- Log files for debugging
-- Summary reports and visualizations
-
 ## Generated Service
 
 This module was auto-generated from:
-- Docker container specification
+- Docker/Apptainer container specification
 - CWL workflow definition  
 - BV-BRC service configuration
 
 The service follows BV-BRC standards for:
-- Parameter validation
-- Resource estimation
-- Error handling
-- Output organization
+- Parameter validation and type checking
+- Resource estimation and scaling
+- Error handling and logging
+- Output organization and workspace integration
+- Container execution (Apptainer/Singularity)
 
-## Development
+## Development Workflow
 
-### Building
+### Initial Setup
+1. Clone this module into BV-BRC dev_container
+2. Run `source user-env.sh` to set environment
+3. Run `make` to build all components
+
+### Making Changes
+1. Edit `service-scripts/App-AlphaFoldV2.pl` for logic changes
+2. Edit `app_specs/AlphaFoldV2.json` for parameter changes
+3. Run `make test-service` to validate changes
+4. Run `make deploy-service` for production deployment
+
+### Integration Testing
 ```bash
-make
-```
-
-### Testing
-```bash
-make test
-```
-
-### Debugging
-Enable debug mode by setting environment variable:
-```bash
+# Set debug mode
 export P3_DEBUG=1
+
+# Test preflight resource estimation
+./service-scripts/App-AlphaFoldV2.pl --preflight /tmp/preflight.json appservice app_specs/AlphaFoldV2.json tests/test_case_1/params.json
+
+# Test actual execution
+./service-scripts/App-AlphaFoldV2.pl xx app_specs/AlphaFoldV2.json tests/test_case_1/params.json
 ```
+
+## Environment Variables
+
+The service uses standard BV-BRC environment variables:
+- `${KB_TOP}` - Development container top directory
+- `${KB_RUNTIME}` - Runtime directory path
+- `${P3_ALLOCATED_CPU}` - Allocated CPU cores
+- `${P3_DEBUG}` - Enable debug logging
 
 ## Support
 
 For issues with this auto-generated service:
-1. Check the generated Perl script for errors
+1. Check the generated Perl script syntax: `perl -c service-scripts/App-AlphaFoldV2.pl`
 2. Verify input parameters match expected format
 3. Review log files in output directory
-4. Contact BV-BRC support if needed
+4. Check container availability and database paths
+5. Contact BV-BRC support team if needed

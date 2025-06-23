@@ -1,7 +1,7 @@
 {
-  "id": "AlphaFold",
-  "script": "App-AlphaFold",
-  "label": "AlphaFold",
+  "id": "AlphaFoldV2",
+  "script": "App-AlphaFoldV2",
+  "label": "AlphaFoldV2",
   "description": "AlphaFold predicts a protein's 3D structure from its amino acid sequence using deep learning",
   "default_memory": "64G",
   "default_cpu": 8,
@@ -9,10 +9,17 @@
   "parameters": [
     {
       "id": "apptainer_image",
-      "label": "",
+      "label": "Image file for Container",
       "type": "string",
       "required": 1,
       "default": "/alphafold/images/alphafold_latest.sif"
+    },
+    {
+      "id": "apptainer_exec",
+      "label": "Default executable inside the container",
+      "type": "string",
+      "required": 1,
+      "default": ""
     },
     {
       "id": "fasta_paths",

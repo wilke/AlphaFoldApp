@@ -21,11 +21,11 @@ use warnings;
 
 =head1 NAME
 
-App-AlphaFold - AlphaFold protein structure prediction
+App-AlphaFoldV2 - AlphaFold protein structure prediction
 
 =head1 SYNOPSIS
 
-App-AlphaFold [options] job_id app_definition_file parameters_file
+App-AlphaFoldV2 [options] job_id app_definition_file parameters_file
 
 =head1 DESCRIPTION
 
@@ -40,7 +40,7 @@ Auto-generated from:
 =cut
 
 # Create the application script object
-my $script = Bio::KBase::AppService::AppScript->new(\&process_alphafold, \&preflight);
+my $script = Bio::KBase::AppService::AppScript->new(\&process_alphafoldv2, \&preflight);
 
 # Run the script
 $script->run(\@ARGV);
@@ -55,7 +55,7 @@ computational requirements (CPU, memory, runtime).
 sub preflight {
     my($app, $app_def, $raw_params, $params) = @_;
     
-    print STDERR "Preflight for AlphaFold\n";
+    print STDERR "Preflight for AlphaFoldV2\n";
     print STDERR "Parameters: " . Dumper($params) if $ENV{P3_DEBUG};
     
     # Default resource allocation
@@ -96,17 +96,17 @@ sub preflight {
     };
 }
 
-=head2 process_alphafold
+=head2 process_alphafoldv2
 
 Main processing function. Handles input staging, tool execution,
 and output collection.
 
 =cut
 
-sub process_alphafold {
+sub process_alphafoldv2 {
     my($app, $app_def, $raw_params, $params) = @_;
     
-    print STDERR "Starting AlphaFold analysis\n";
+    print STDERR "Starting AlphaFoldV2 analysis\n";
     print STDERR "Parameters: " . Dumper($params) if $ENV{P3_DEBUG};
     
     # Validate required parameters
@@ -121,7 +121,7 @@ sub process_alphafold {
     
     # Get output configuration
     my $output_folder = $app->result_folder();
-    my $output_base = $params->{output_file} // "alphafold_result";
+    my $output_base = $params->{output_file} // "alphafoldv2_result";
     
     eval {
         # Stage input files
@@ -133,12 +133,12 @@ sub process_alphafold {
         # Collect and save outputs
         collect_outputs($app, $results, $output_folder, $output_base, $params);
         
-        print STDERR "AlphaFold analysis completed successfully\n";
+        print STDERR "AlphaFoldV2 analysis completed successfully\n";
     };
     
     if ($@) {
         my $error = $@;
-        print STDERR "AlphaFold analysis failed: $error\n";
+        print STDERR "AlphaFoldV2 analysis failed: $error\n";
         
         # Save error report
         my $error_file = "$output_folder/error.txt";
@@ -222,15 +222,19 @@ Executes the main computational tool with prepared inputs.
 sub execute_tool {
     my($app, $params, $staged_inputs, $work_dir, $stage_dir) = @_;
     
-    print STDERR "Executing AlphaFold...\n";
+    print STDERR "Executing AlphaFoldV2...\n";
     
     # Get allocated resources
     my $threads = $ENV{P3_ALLOCATED_CPU} // 1;
     
     # Build command line
     my @cmd = ("apptainer", "run", "-B", "/alphafold/databases:/databases");
-    
-        push @cmd, "--fasta_paths", $staged_inputs->{fasta_paths} if $staged_inputs->{fasta_paths};
+    if $params->{apptainer_image} {
+        push @cmd, $params->{apptainer_image};
+        push @cmd, $params->{apptainer_executable} if $params->{apptainer_executable};
+    }
+    push @cmd, params->{apptainer_image} if $params->{apptainer_image};
+    push @cmd, "--fasta_paths", $staged_inputs->{fasta_paths} if $staged_inputs->{fasta_paths};
     push @cmd, "--output_dir", $params->{output_dir} if defined $params->{output_dir};
     push @cmd, "--data_dir", $params->{data_dir} if defined $params->{data_dir};
     push @cmd, "--model_preset", $params->{model_preset} if defined $params->{model_preset};
@@ -264,6 +268,8 @@ sub execute_tool {
             "unknown:latest",
             @cmd
         );
+        print STDERR "Running Singularity command: " . join(" ", @singularity_cmd) . "\n";
+        # Execute the command
         $rc = system(@singularity_cmd);
     } else {
         # Direct execution (for testing)
@@ -277,7 +283,7 @@ sub execute_tool {
     # Standard execution pattern:
     # $rc = system(@cmd);
     # if ($rc != 0) {
-    #     die "AlphaFold execution failed with exit code $rc";
+    #     die "AlphaFoldV2 execution failed with exit code $rc";
     # }
     
     # Return results information
@@ -443,8 +449,8 @@ sub handle_error {
 
 This template uses the following placeholders that should be replaced:
 
-- AlphaFold: Name of the tool (e.g., "Blast", "FastANI")
-- alphafold: Lowercase tool name for function names
+- AlphaFoldV2: Name of the tool (e.g., "Blast", "FastANI")
+- alphafoldv2: Lowercase tool name for function names
 - AlphaFold protein structure prediction: Brief description of the tool
 - AlphaFold predicts a protein's 3D structure from its amino acid sequence.
 This tool uses DeepMind's AlphaFold v2.3.0 implementation.

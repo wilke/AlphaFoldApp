@@ -1,6 +1,6 @@
 {
   "apptainer_image": "/alphafold/images/alphafold_latest.sif",
-  "fasta_paths": "test_protein_small.fasta",
+  "fasta_paths": "/test_data/fasta_paths_test.txt",
   "output_dir": "./alphafold_output",
   "data_dir": "/databases",
   "model_preset": "monomer",

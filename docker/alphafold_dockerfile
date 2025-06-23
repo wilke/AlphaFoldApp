@@ -1,0 +1,22 @@
+# Dockerfile for AlphaFold metadata (required by service generator)
+# Note: This is metadata only - actual execution uses singularity image
+
+FROM ubuntu:20.04
+
+# Required metadata labels for BV-BRC service generation
+LABEL tool_name="AlphaFold"
+LABEL tool_version="2.3.0"
+LABEL tool_description="AlphaFold is an AI system developed by DeepMind that predicts a protein's 3D structure from its amino acid sequence"
+LABEL tool_author="DeepMind Technologies Limited"
+LABEL tool_source="https://github.com/deepmind/alphafold"
+LABEL tool_license="Apache-2.0"
+LABEL tool_topics="Protein structure prediction, Machine learning, Structural biology"
+LABEL tool_publications="https://doi.org/10.1038/s41586-021-03819-2"
+
+# Resource requirements
+LABEL resource_requirements='{"cpu": 8, "memory": "64GB", "runtime": "24h", "gpu": "optional"}'
+LABEL database_requirements='{"size": "2.6TB", "path": "/alphafold/databases"}'
+
+# Container information
+LABEL container_type="singularity"
+LABEL container_image="/alphafold/images/alphafold_latest.sif"
