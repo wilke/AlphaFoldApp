@@ -1,0 +1,144 @@
+{
+  "id": "AlphaFold",
+  "script": "App-AlphaFold",
+  "label": "AlphaFold",
+  "description": "AlphaFold predicts a protein's 3D structure from its amino acid sequence using deep learning",
+  "default_memory": "64G",
+  "default_cpu": 8,
+  "default_runtime": 7200,
+  "parameters": [
+    {
+      "id": "apptainer_image",
+      "label": "",
+      "type": "string",
+      "required": 1,
+      "default": "/alphafold/images/alphafold_latest.sif"
+    },
+    {
+      "id": "fasta_paths",
+      "label": "",
+      "type": "wsid",
+      "desc": "FASTA file containing protein sequence(s) to predict",
+      "required": 1
+    },
+    {
+      "id": "output_dir",
+      "label": "",
+      "type": "string",
+      "desc": "Output directory for prediction results",
+      "required": 1,
+      "default": "./alphafold_output"
+    },
+    {
+      "id": "data_dir",
+      "label": "",
+      "type": "string",
+      "desc": "Path to AlphaFold databases",
+      "required": 1,
+      "default": "/databases"
+    },
+    {
+      "id": "model_preset",
+      "label": "",
+      "type": "enum",
+      "desc": "Choose the AlphaFold model configuration",
+      "required": 0,
+      "default": "monomer",
+      "enum": [
+        "monomer",
+        "monomer_ptm",
+        "monomer_casp14",
+        "multimer"
+      ]
+    },
+    {
+      "id": "db_preset",
+      "label": "",
+      "type": "enum",
+      "desc": "Choose database configuration for MSA generation",
+      "required": 0,
+      "default": "full_dbs",
+      "enum": [
+        "full_dbs",
+        "reduced_dbs"
+      ]
+    },
+    {
+      "id": "max_template_date",
+      "label": "",
+      "type": "string",
+      "desc": "Latest template release date to consider (YYYY-MM-DD)",
+      "required": 0,
+      "default": "2022-01-01"
+    },
+    {
+      "id": "models_to_relax",
+      "label": "",
+      "type": "enum",
+      "desc": "Which predicted models to run energy minimization on",
+      "required": 0,
+      "default": "best",
+      "enum": [
+        "best",
+        "all",
+        "none"
+      ]
+    },
+    {
+      "id": "num_multimer_predictions_per_model",
+      "label": "",
+      "type": "int",
+      "desc": "Number of predictions per multimer model (only for multimer preset)",
+      "required": 0,
+      "default": 5
+    },
+    {
+      "id": "use_gpu_relax",
+      "label": "",
+      "type": "bool",
+      "desc": "Enable GPU acceleration for structure relaxation (if available)",
+      "required": 0,
+      "default": true
+    },
+    {
+      "id": "use_precomputed_msas",
+      "label": "",
+      "type": "bool",
+      "desc": "Reuse MSAs from previous runs (faster for parameter testing)",
+      "required": 0,
+      "default": false
+    },
+    {
+      "id": "benchmark",
+      "label": "",
+      "type": "bool",
+      "desc": "Run timing benchmarks",
+      "required": 0,
+      "default": false
+    },
+    {
+      "id": "random_seed",
+      "label": "",
+      "type": "int",
+      "desc": "Random seed for reproducibility (optional)",
+      "required": 0,
+      "min": 1,
+      "max": 2147483647,
+      "step": null
+    },
+    {
+      "id": "output_path",
+      "label": "Output Folder",
+      "type": "folder",
+      "required": 0,
+      "desc": "Path to which the output will be written"
+    },
+    {
+      "id": "output_file",
+      "label": "File Basename",
+      "type": "wsid",
+      "required": 0,
+      "desc": "Basename for generated output files"
+    }
+  ]
+}

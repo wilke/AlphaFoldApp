@@ -1,0 +1,16 @@
+{
+  "apptainer_image": "/alphafold/images/alphafold_latest.sif",
+  "fasta_paths": "/test_data/fasta_paths_test.txt",
+  "output_dir": "./alphafold_output",
+  "data_dir": "/databases",
+  "model_preset": "monomer",
+  "db_preset": "full_dbs",
+  "max_template_date": "2022-01-01",
+  "models_to_relax": "best",
+  "num_multimer_predictions_per_model": 5,
+  "use_gpu_relax": true,
+  "use_precomputed_msas": false,
+  "benchmark": false,
+  "output_path": "/test_user@patricbrc.org/test_output/medium_monomer_ptm_test",
+  "output_file": "medium_monomer_ptm_test_result"
+}
