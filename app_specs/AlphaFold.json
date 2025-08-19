@@ -1,55 +1,50 @@
 {
-  "id": "AlphaFoldV2",
-  "script": "App-AlphaFoldV2",
+  "id": "AlphaFold",
+  "script": "App-AlphaFold.pl",
   "label": "AlphaFoldV2",
   "description": "AlphaFold predicts a protein's 3D structure from its amino acid sequence using deep learning",
   "default_memory": "64G",
   "default_cpu": 8,
+  "default_gpu": 4,
   "default_runtime": 7200,
   "parameters": [
     {
-      "id": "apptainer_image",
-      "label": "Image file for Container",
-      "type": "string",
-      "required": 1,
-      "default": "/alphafold/images/alphafold_latest.sif"
-    },
-    {
-      "id": "apptainer_exec",
-      "label": "Default executable inside the container",
-      "type": "string",
-      "required": 1,
-      "default": ""
+      "id" : "output_path",
+      "label" : "Workspace Output Path",
+      "type" : "wsid",
+      "desc" : "Path to the workspace",
+      "required" : 1,
     },
     {
       "id": "fasta_paths",
-      "label": "",
-      "type": "wsid",
+      "label": "FASTA Paths",
+      "type": "string", 
       "desc": "FASTA file containing protein sequence(s) to predict",
-      "required": 1
+      "required": 1,
+      "default": "/input/test_199aa_fixed.fasta"
     },
     {
       "id": "output_dir",
-      "label": "",
+      "label": "Output Directory",
       "type": "string",
       "desc": "Output directory for prediction results",
       "required": 1,
-      "default": "./alphafold_output"
+      "default": "/output"
     },
     {
       "id": "data_dir",
-      "label": "",
+      "label": "Data Directory",
       "type": "string",
       "desc": "Path to AlphaFold databases",
       "required": 1,
-      "default": "/databases"
+      "default": "/data"
     },
     {
       "id": "model_preset",
-      "label": "",
+      "label": "Model Preset",
       "type": "enum",
       "desc": "Choose the AlphaFold model configuration",
-      "required": 0,
+      "required": 1,
       "default": "monomer",
       "enum": [
         "monomer",
@@ -60,10 +55,10 @@
     },
     {
       "id": "db_preset",
-      "label": "",
+      "label": "Database Preset",
       "type": "enum",
       "desc": "Choose database configuration for MSA generation",
-      "required": 0,
+      "required": 1,
       "default": "full_dbs",
       "enum": [
         "full_dbs",
@@ -72,80 +67,67 @@
     },
     {
       "id": "max_template_date",
-      "label": "",
+      "label": "Max Template Date",
       "type": "string",
       "desc": "Latest template release date to consider (YYYY-MM-DD)",
-      "required": 0,
+      "required": 1,
       "default": "2022-01-01"
     },
     {
-      "id": "models_to_relax",
-      "label": "",
-      "type": "enum",
-      "desc": "Which predicted models to run energy minimization on",
-      "required": 0,
-      "default": "best",
-      "enum": [
-        "best",
-        "all",
-        "none"
-      ]
+      "id": "uniref90_database_path",
+      "label": "UniRef90 Database Path",
+      "type": "string",
+      "required": 1,
+      "desc": "Path to UniRef90 database for MSA generation",
+      "default": "/data/uniref90/uniref90.fasta"
     },
     {
-      "id": "num_multimer_predictions_per_model",
-      "label": "",
-      "type": "int",
-      "desc": "Number of predictions per multimer model (only for multimer preset)",
-      "required": 0,
-      "default": 5
+      "id": "mgnify_database_path",
+      "label": "MGnify Database Path",
+      "type": "string",
+      "required": 1,
+      "desc": "Path to MGnify database for MSA generation",
+      "default": "/data/mgnify/mgy_clusters_2022_05.fa"
     },
     {
-      "id": "use_gpu_relax",
-      "label": "",
-      "type": "bool",
-      "desc": "Enable GPU acceleration for structure relaxation (if available)",
-      "required": 0,
-      "default": true
+      "id": "bfd_database_path",
+      "label": "BFD Database Path",
+      "type": "string",
+      "required": 1,
+      "desc": "Path to BFD (Big Fantastic Database) for MSA generation",
+      "default": "/data/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt"
     },
     {
-      "id": "use_precomputed_msas",
-      "label": "",
-      "type": "bool",
-      "desc": "Reuse MSAs from previous runs (faster for parameter testing)",
-      "required": 0,
-      "default": false
+      "id": "uniref30_database_path",
+      "label": "UniRef30 Database Path",
+      "type": "string",
+      "required": 1,
+      "desc": "Path to UniRef30 database for template search",
+      "default": "/data/uniref30/UniRef30_2021_03"
     },
     {
-      "id": "benchmark",
-      "label": "",
-      "type": "bool",
-      "desc": "Run timing benchmarks",
-      "required": 0,
-      "default": false
+      "id": "pdb70_database_path",
+      "label": "PDB70 Database Path",
+      "type": "string",
+      "required": 1,
+      "desc": "Path to PDB70 database for template search",
+      "default": "/data/pdb70/pdb70"
     },
     {
-      "id": "random_seed",
-      "label": "",
-      "type": "int",
-      "desc": "Random seed for reproducibility (optional)",
-      "required": 0,
-      "min": 1,
-      "max": 2147483647,
-      "step": null
+      "id": "template_mmcif_dir",
+      "label": "Template mmCIF Directory",
+      "type": "string",
+      "required": 1,
+      "desc": "Path to directory containing PDB mmCIF template files",
+      "default": "/data/pdb_mmcif/mmcif_files"
     },
     {
-      "id": "output_path",
-      "label": "Output Folder",
-      "type": "folder",
-      "required": 0,
-      "desc": "Path to which the output will be written"
-    },
-    {
-      "id": "output_file",
-      "label": "File Basename",
-      "type": "wsid",
-      "required": 0,
-      "desc": "Basename for generated output files"
+      "id": "obsolete_pdbs_path",
+      "label": "Obsolete PDBs Path",
+      "type": "string",
+      "required": 1,
+      "desc": "Path to file listing obsolete PDB entries",
+      "default": "/data/pdb_mmcif/obsolete.dat"
     }
   ]
 }
