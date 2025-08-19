@@ -16,9 +16,20 @@ use File::Path qw(make_path remove_tree);
 use JSON;
 use Data::Dumper;
 use POSIX;
+use Cwd;
 use strict;
 use warnings;
 
+use Bio::KBase::AppService::AppConfig qw(application_backend_dir);
+   
+# Create the application script object
+my $script = Bio::KBase::AppService::AppScript->new(\&process_alphafoldv2, \&preflight);
+
+
+print Dumper($script);
+
+# Run the script
+$script->run(\@ARGV);
 =head1 NAME
 
 App-AlphaFoldV2 - AlphaFold protein structure prediction
@@ -39,11 +50,11 @@ Auto-generated from:
 
 =cut
 
-# Create the application script object
-my $script = Bio::KBase::AppService::AppScript->new(\&process_alphafoldv2, \&preflight);
+# # Create the application script object
+# my $script = Bio::KBase::AppService::AppScript->new(\&process_alphafoldv2, \&preflight);
 
-# Run the script
-$script->run(\@ARGV);
+# # Run the script
+# $script->run(\@ARGV);
 
 =head2 preflight
 
@@ -94,6 +105,7 @@ sub preflight {
         memory => $memory,
         runtime => $time,
     };
+
 }
 
 =head2 process_alphafoldv2
@@ -105,30 +117,41 @@ and output collection.
 
 sub process_alphafoldv2 {
     my($app, $app_def, $raw_params, $params) = @_;
-    
+
+    my $config_vars{data_dir} = application_backend_dir;
+
+
+
     print STDERR "Starting AlphaFoldV2 analysis\n";
     print STDERR "Parameters: " . Dumper($params) if $ENV{P3_DEBUG};
-    
+
+   
     # Validate required parameters
+
     validate_parameters($params);
     
     # Setup working environment
     my $cwd = getcwd();
     my $work_dir = "$cwd/work";
     my $stage_dir = "$cwd/stage";
-    
+
+    print STDERR "Creating working directories: $work_dir, $stage_dir\n";
     make_path($work_dir, $stage_dir);
     
     # Get output configuration
     my $output_folder = $app->result_folder();
+    die "Output folder not specified" unless $output_folder;
+
     my $output_base = $params->{output_file} // "alphafoldv2_result";
-    
+    print STDERR "Output base name: $output_base\n";
+
     eval {
         # Stage input files
         my $staged_inputs = stage_inputs($app, $params, $stage_dir);
-        
+        print STDERR "Staged inputs: " . Dumper($staged_inputs) if $ENV{P3_DEBUG};
+
         # Execute main tool
-        my $results = execute_tool($app, $params, $staged_inputs, $work_dir, $stage_dir);
+        my $results = execute_tool($app, $raw_params, $staged_inputs, $work_dir, $stage_dir);
         
         # Collect and save outputs
         collect_outputs($app, $results, $output_folder, $output_base, $params);
@@ -160,13 +183,12 @@ Validates input parameters and ensures all required inputs are present.
 sub validate_parameters {
     my($params) = @_;
     
-        die "Missing required parameter: apptainer_image" unless $params->{apptainer_image};
     die "Missing required parameter: fasta_paths" unless $params->{fasta_paths};
     die "Missing required parameter: output_dir" unless $params->{output_dir};
     die "Missing required parameter: data_dir" unless $params->{data_dir};
     die "Missing required parameter: model_preset" unless $params->{model_preset};
     die "Missing required parameter: db_preset" unless $params->{db_preset};
-    die "Missing required parameter: models_to_relax" unless $params->{models_to_relax};
+    # die "Missing required parameter: models_to_relax" unless $params->{models_to_relax};
     
     # Example validations:
     # die "Missing required parameter: input_file" unless $params->{input_file};
@@ -189,9 +211,21 @@ sub stage_inputs {
     
     # Stage fasta_paths
     if ($params->{fasta_paths}) {
-        my $file_path = "$stage_dir/fasta_paths.data";
-        $app->workspace->download_file($params->{fasta_paths}, $file_path, 1);
-        $staged_inputs->{fasta_paths} = $file_path;
+        # if workspace space get from workspace
+        if ($app->workspace->exists($params->{fasta_paths})) {
+            my $file_path = "$stage_dir/fasta_paths.data";
+            $app->workspace->download_file($params->{fasta_paths}, $file_path, 1);
+            $staged_inputs->{fasta_paths} = $file_path;
+        }
+        else {
+            my $file_path = $params->{fasta_paths};
+            # check if local
+            if (-e $file_path) {
+                $staged_inputs->{fasta_paths} = $file_path;
+            } else {
+                die "Fasta file not found: $file_path";
+            }
+        }
     }
     
     # Example staging patterns:
@@ -227,54 +261,59 @@ sub execute_tool {
     # Get allocated resources
     my $threads = $ENV{P3_ALLOCATED_CPU} // 1;
     
-    # Build command line
-    my @cmd = ("apptainer", "run", "-B", "/alphafold/databases:/databases");
-    if $params->{apptainer_image} {
-        push @cmd, $params->{apptainer_image};
-        push @cmd, $params->{apptainer_executable} if $params->{apptainer_executable};
+    # Build command line - running directly within container
+    my @cmd = ("python", "/app/alphafold/run_alphafold.py");
+    # push @cmd, "--fasta_paths", $staged_inputs->{fasta_paths} if $staged_inputs->{fasta_paths};
+    # push @cmd, "--output_dir", $params->{output_dir} if defined $params->{output_dir};
+    # push @cmd, "--data_dir", $params->{data_dir} if defined $params->{data_dir};
+    # push @cmd, "--model_preset", $params->{model_preset} if defined $params->{model_preset};
+    # push @cmd, "--db_preset", $params->{db_preset} if defined $params->{db_preset};
+    # push @cmd, "--max_template_date", $params->{max_template_date} if defined $params->{max_template_date};
+    # push @cmd, "--models_to_relax", $params->{models_to_relax} if defined $params->{models_to_relax};
+    # push @cmd, "--num_multimer_predictions_per_model", $params->{num_multimer_predictions_per_model} if defined $params->{num_multimer_predictions_per_model};
+    # push @cmd, "--use_gpu_relax" if $params->{use_gpu_relax};
+    # push @cmd, "--use_precomputed_msas" if $params->{use_precomputed_msas};
+    # push @cmd, "--benchmark" if $params->{benchmark};
+    # push @cmd, "--random_seed", $params->{random_seed} if defined $params->{random_seed};
+
+    # for every key in params add to command line
+    foreach my $key (keys %$params) {
+        next if $key eq 'output_path' ;
+        push @cmd, "--$key=" . $params->{$key} if defined $params->{$key};
     }
-    push @cmd, params->{apptainer_image} if $params->{apptainer_image};
-    push @cmd, "--fasta_paths", $staged_inputs->{fasta_paths} if $staged_inputs->{fasta_paths};
-    push @cmd, "--output_dir", $params->{output_dir} if defined $params->{output_dir};
-    push @cmd, "--data_dir", $params->{data_dir} if defined $params->{data_dir};
-    push @cmd, "--model_preset", $params->{model_preset} if defined $params->{model_preset};
-    push @cmd, "--db_preset", $params->{db_preset} if defined $params->{db_preset};
-    push @cmd, "--max_template_date", $params->{max_template_date} if defined $params->{max_template_date};
-    push @cmd, "--models_to_relax", $params->{models_to_relax} if defined $params->{models_to_relax};
-    push @cmd, "--num_multimer_predictions_per_model", $params->{num_multimer_predictions_per_model} if defined $params->{num_multimer_predictions_per_model};
-    push @cmd, "--use_gpu_relax" if $params->{use_gpu_relax};
-    push @cmd, "--use_precomputed_msas" if $params->{use_precomputed_msas};
-    push @cmd, "--benchmark" if $params->{benchmark};
-    push @cmd, "--random_seed", $params->{random_seed} if defined $params->{random_seed};
+
+    my $db = "";
+    $db = $params->{data_dir} if $params->{data_dir};
+
     
+    my $backend_dir = application_backend_dir();
+    if ($backend_dir and -d "$backend_dir/databases") {
+        $db = "$backend_dir/databases";
+    }
+    push @cmd, "--data_dir", "$db";
+    push @cmd, "--uniref90_database_path", "$db/uniref90/uniref90.fasta";
+    push @cmd, "--mgnify_database_path", "$db/mgnify/mgy_clusters_2022_05.fa";
+    push @cmd, "--bfd_database_path", "$db/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt";
+    push @cmd, "--uniref30_database_path", "$db/uniref30/UniRef30_2021_03";
+    push @cmd, "--pdb70_database_path", "$db/pdb70/pdb70";
+    push @cmd, "--template_mmcif_dir", "$db/pdb_mmcif/mmcif_files";
+    push @cmd, "--obsolete_pdbs_path", "$db/pdb_mmcif/obsolete.dat";
+  
+    # constants
+    push @cmd, "--db_preset", "full_dbs";
+    push @cmd, "--model_preset", "monomer";
+    push @cmd, "--max_template_date", "2022-01-01";
+
     # Example command building:
     # push @cmd, "--input", $staged_inputs->{input_file} if $staged_inputs->{input_file};
     # push @cmd, "--output", "$work_dir/output.txt";
     # push @cmd, "--threads", $threads;
     # push @cmd, "--param", $params->{param_value} if defined $params->{param_value};
     
-    # Execute command
+    # Execute command directly within container
     print STDERR "Running command: " . join(" ", @cmd) . "\n";
     
-    my $rc;
-    
-    # Execute with Singularity container
-    if ($ENV{P3_USE_SINGULARITY}) {
-        my @singularity_cmd = (
-            "singularity", "exec",
-            "--bind", "$stage_dir:/workspace/input",
-            "--bind", "$work_dir:/workspace/output",
-            "--pwd", "/workspace",
-            "unknown:latest",
-            @cmd
-        );
-        print STDERR "Running Singularity command: " . join(" ", @singularity_cmd) . "\n";
-        # Execute the command
-        $rc = system(@singularity_cmd);
-    } else {
-        # Direct execution (for testing)
-        $rc = system(@cmd);
-    }
+    my $rc = system(@cmd);
     
     if ($rc != 0) {
         die "Tool execution failed with exit code $rc";
@@ -597,5 +636,8 @@ Common patterns for different tool types:
 - Output: Annotated sequences, reports, statistics
 
 =cut
+
+
+
 
 1;
