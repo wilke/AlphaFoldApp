@@ -15,7 +15,7 @@ use File::Basename;
 use File::Path qw(make_path remove_tree);
 use JSON;
 use Data::Dumper;
-use POSIX;
+use POSIX qw(strftime);
 use Cwd;
 use strict;
 use warnings;
@@ -118,9 +118,8 @@ and output collection.
 sub process_alphafoldv2 {
     my($app, $app_def, $raw_params, $params) = @_;
 
-    my $config_vars{data_dir} = application_backend_dir;
 
-
+    print STDERR "Application backend directory: " . application_backend_dir() . "\n";
 
     print STDERR "Starting AlphaFoldV2 analysis\n";
     print STDERR "Parameters: " . Dumper($params) if $ENV{P3_DEBUG};
@@ -143,7 +142,15 @@ sub process_alphafoldv2 {
     die "Output folder not specified" unless $output_folder;
 
     my $output_base = $params->{output_file} // "alphafoldv2_result";
+    
+    # Create a unique subfolder for this run using timestamp and task ID
+    my $timestamp = strftime("%Y%m%d_%H%M%S", localtime);
+    my $task_id = $app->{task_id} // "unknown";
+    my $run_folder = "${output_base}_${timestamp}_${task_id}";
+    $output_folder = "$output_folder/$run_folder";
+    
     print STDERR "Output base name: $output_base\n";
+    print STDERR "Output folder: $output_folder\n";
 
     eval {
         # Stage input files
@@ -151,7 +158,7 @@ sub process_alphafoldv2 {
         print STDERR "Staged inputs: " . Dumper($staged_inputs) if $ENV{P3_DEBUG};
 
         # Execute main tool
-        my $results = execute_tool($app, $raw_params, $staged_inputs, $work_dir, $stage_dir);
+        my $results = execute_tool($app, $params, $staged_inputs, $work_dir, $stage_dir);
         
         # Collect and save outputs
         collect_outputs($app, $results, $output_folder, $output_base, $params);
@@ -276,33 +283,62 @@ sub execute_tool {
     # push @cmd, "--benchmark" if $params->{benchmark};
     # push @cmd, "--random_seed", $params->{random_seed} if defined $params->{random_seed};
 
-    # for every key in params add to command line
+    # for every key in params add to command line (except database paths and presets which are handled conditionally)
     foreach my $key (keys %$params) {
-        next if $key eq 'output_path' ;
-        push @cmd, "--$key=" . $params->{$key} if defined $params->{$key};
+        next if $key eq 'output_path' || $key eq 'output_dir';
+        # Skip database-related parameters - handled conditionally below
+        next if $key =~ /database_path$|_database_path$|template_mmcif_dir|obsolete_pdbs_path|db_preset|model_preset|data_dir/;
+        # Skip parameters that need special handling or have null values
+        next if $key eq 'max_template_date' || $key eq 'use_gpu_relax';
+        next if !defined $params->{$key} || $params->{$key} eq 'null' || $params->{$key} eq '';
+        push @cmd, "--$key=" . $params->{$key};
     }
+
+    push @cmd, "--output_dir=" . $work_dir;
+
 
     my $db = "";
     $db = $params->{data_dir} if $params->{data_dir};
 
     
-    my $backend_dir = application_backend_dir();
+    my $backend_dir = application_backend_dir;
     if ($backend_dir and -d "$backend_dir/databases") {
         $db = "$backend_dir/databases";
     }
     push @cmd, "--data_dir", "$db";
+    
+    # Common databases for all presets
     push @cmd, "--uniref90_database_path", "$db/uniref90/uniref90.fasta";
     push @cmd, "--mgnify_database_path", "$db/mgnify/mgy_clusters_2022_05.fa";
-    push @cmd, "--bfd_database_path", "$db/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt";
-    push @cmd, "--uniref30_database_path", "$db/uniref30/UniRef30_2021_03";
-    push @cmd, "--pdb70_database_path", "$db/pdb70/pdb70";
     push @cmd, "--template_mmcif_dir", "$db/pdb_mmcif/mmcif_files";
     push @cmd, "--obsolete_pdbs_path", "$db/pdb_mmcif/obsolete.dat";
+    
+    # Database paths based on db_preset
+    my $db_preset = $params->{db_preset} // "reduced_dbs";
+    if ($db_preset eq "full_dbs") {
+        push @cmd, "--bfd_database_path", "$db/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt";
+        push @cmd, "--uniref30_database_path", "$db/uniref30/UniRef30_2021_03";
+    } elsif ($db_preset eq "reduced_dbs") {
+        push @cmd, "--small_bfd_database_path", "$db/small_bfd/bfd-first_non_consensus_sequences.fasta";
+    }
+    
+    # Database paths based on model_preset  
+    my $model_preset = $params->{model_preset} // "monomer";
+    if ($model_preset eq "multimer") {
+        push @cmd, "--pdb_seqres_database_path", "$db/pdb_seqres/pdb_seqres.txt";
+        push @cmd, "--uniprot_database_path", "$db/uniprot/uniprot.fasta";
+    } else {
+        # monomer, monomer_ptm, monomer_casp14
+        push @cmd, "--pdb70_database_path", "$db/pdb70/pdb70";
+    }
   
-    # constants
-    push @cmd, "--db_preset", "full_dbs";
-    push @cmd, "--model_preset", "monomer";
+    # constants - use values from parameters
+    push @cmd, "--db_preset", $params->{db_preset} if defined $params->{db_preset};
+    push @cmd, "--model_preset", $params->{model_preset} if defined $params->{model_preset};
+    
+    # Required constants with proper defaults
     push @cmd, "--max_template_date", "2022-01-01";
+    push @cmd, "--use_gpu_relax=false";
 
     # Example command building:
     # push @cmd, "--input", $staged_inputs->{input_file} if $staged_inputs->{input_file};
@@ -346,50 +382,83 @@ sub collect_outputs {
     
     my $work_dir = $results->{work_dir};
     
+    # AlphaFold outputs are in $work_dir since we set --output_dir=$work_dir
+    # The structure is: work_dir/target_name/[various output files]
     
-    # Collect prediction_results
-    my @prediction_results_files = glob("$work_dir/$params->{output_dir}");
-    for my $file (@prediction_results_files) {
-        if (-f $file) {
-            my $basename = basename($file);
-            $app->workspace->save_file_to_file($file, {},
-                                             "$output_folder/$basename",
-                                             'auto', 1);
+    # Find all target directories (one per sequence in the FASTA)
+    opendir(my $dh, $work_dir) or die "Cannot open $work_dir: $!";
+    my @target_dirs = grep { -d "$work_dir/$_" && $_ !~ /^\.\.?$/ } readdir($dh);
+    closedir($dh);
+    
+    for my $target_dir (@target_dirs) {
+        my $target_path = "$work_dir/$target_dir";
+        
+        # Collect all PDB structures (ranked and unrelaxed)
+        my @pdb_files = glob("$target_path/*.pdb");
+        for my $file (@pdb_files) {
+            if (-f $file) {
+                my $basename = basename($file);
+                my $save_path = "$output_folder/${target_dir}_${basename}";
+                print STDERR "Saving PDB: $file -> $save_path\n" if $ENV{P3_DEBUG};
+                $app->workspace->save_file_to_file($file, {},
+                                                 $save_path,
+                                                 'txt', 1);
+            }
+        }
+        
+        # Collect all CIF structures (ranked and unrelaxed)
+        my @cif_files = glob("$target_path/*.cif");
+        for my $file (@cif_files) {
+            if (-f $file) {
+                my $basename = basename($file);
+                my $save_path = "$output_folder/${target_dir}_${basename}";
+                print STDERR "Saving CIF: $file -> $save_path\n" if $ENV{P3_DEBUG};
+                $app->workspace->save_file_to_file($file, {},
+                                                 $save_path,
+                                                 'txt', 1);
+            }
+        }
+        
+        # Collect pickle files (features and results)
+        my @pkl_files = glob("$target_path/*.pkl");
+        for my $file (@pkl_files) {
+            if (-f $file) {
+                my $basename = basename($file);
+                my $save_path = "$output_folder/${target_dir}_${basename}";
+                print STDERR "Saving PKL: $file -> $save_path\n" if $ENV{P3_DEBUG};
+                $app->workspace->save_file_to_file($file, {}, $save_path, 'pkl', 1);
+        }
+        
+        # Collect JSON files (timings, ranking_debug)
+        my @json_files = glob("$target_path/*.json");
+        for my $file (@json_files) {
+            if (-f $file) {
+                my $basename = basename($file);
+                my $save_path = "$output_folder/${target_dir}_${basename}";
+                print STDERR "Saving JSON: $file -> $save_path\n" if $ENV{P3_DEBUG};
+                $app->workspace->save_file_to_file($file, {},
+                                                 $save_path,
+                                                 'json', 1);
+            }
+        }
+        
+        # Collect MSA files if present
+        if (-d "$target_path/msas") {
+            my @msa_files = glob("$target_path/msas/*");
+            for my $file (@msa_files) {
+                if (-f $file) {
+                    my $basename = basename($file);
+                    my $save_path = "$output_folder/${target_dir}_msa_${basename}";
+                    print STDERR "Saving MSA: $file -> $save_path\n" if $ENV{P3_DEBUG};
+                    $app->workspace->save_file_to_file($file, {},
+                                                     $save_path,
+                                                     'auto', 1);
+                }
+            }
         }
     }
-
-    # Collect ranked_structures
-    my @ranked_structures_files = glob("$work_dir/$params->{output_dir}/*/ranked_*.pdb");
-    for my $file (@ranked_structures_files) {
-        if (-f $file) {
-            my $basename = basename($file);
-            $app->workspace->save_file_to_file($file, {},
-                                             "$output_folder/$basename",
-                                             'auto', 1);
-        }
-    }
-
-    # Collect timings
-    my @timings_files = glob("$work_dir/$params->{output_dir}/*/timings.json");
-    for my $file (@timings_files) {
-        if (-f $file) {
-            my $basename = basename($file);
-            $app->workspace->save_file_to_file($file, {},
-                                             "$output_folder/$basename",
-                                             'auto', 1);
-        }
-    }
-
-    # Collect confidence_metrics
-    my @confidence_metrics_files = glob("$work_dir/$params->{output_dir}/*/ranking_debug.json");
-    for my $file (@confidence_metrics_files) {
-        if (-f $file) {
-            my $basename = basename($file);
-            $app->workspace->save_file_to_file($file, {},
-                                             "$output_folder/$basename",
-                                             'auto', 1);
-        }
-    }
+    
+    print STDERR "Output collection completed. Files saved to: $output_folder\n";
     
     # Example output collection:
     #
