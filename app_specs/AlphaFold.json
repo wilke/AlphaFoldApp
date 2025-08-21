@@ -32,14 +32,6 @@
       "default": "/output"
     },
     {
-      "id": "data_dir",
-      "label": "Data Directory",
-      "type": "string",
-      "desc": "Path to AlphaFold databases",
-      "required": 1,
-      "default": "/data"
-    },
-    {
       "id": "model_preset",
       "label": "Model Preset",
       "type": "enum",
@@ -54,80 +46,24 @@
       ]
     },
     {
+      "id": "data_dir",
+      "label": "Data Directory",
+      "type": "string",
+      "desc": "Path to AlphaFold databases",
+      "required": 1,
+      "default": "/databases"
+    },
+    {
       "id": "db_preset",
       "label": "Database Preset",
       "type": "enum",
-      "desc": "Choose database configuration for MSA generation",
+      "desc": "Choose database configuration",
       "required": 1,
-      "default": "full_dbs",
+      "default": "reduced_dbs",
       "enum": [
         "full_dbs",
         "reduced_dbs"
       ]
-    },
-    {
-      "id": "max_template_date",
-      "label": "Max Template Date",
-      "type": "string",
-      "desc": "Latest template release date to consider (YYYY-MM-DD)",
-      "required": 1,
-      "default": "2022-01-01"
-    },
-    {
-      "id": "uniref90_database_path",
-      "label": "UniRef90 Database Path",
-      "type": "string",
-      "required": 1,
-      "desc": "Path to UniRef90 database for MSA generation",
-      "default": "/data/uniref90/uniref90.fasta"
-    },
-    {
-      "id": "mgnify_database_path",
-      "label": "MGnify Database Path",
-      "type": "string",
-      "required": 1,
-      "desc": "Path to MGnify database for MSA generation",
-      "default": "/data/mgnify/mgy_clusters_2022_05.fa"
-    },
-    {
-      "id": "bfd_database_path",
-      "label": "BFD Database Path",
-      "type": "string",
-      "required": 1,
-      "desc": "Path to BFD (Big Fantastic Database) for MSA generation",
-      "default": "/data/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt"
-    },
-    {
-      "id": "uniref30_database_path",
-      "label": "UniRef30 Database Path",
-      "type": "string",
-      "required": 1,
-      "desc": "Path to UniRef30 database for template search",
-      "default": "/data/uniref30/UniRef30_2021_03"
-    },
-    {
-      "id": "pdb70_database_path",
-      "label": "PDB70 Database Path",
-      "type": "string",
-      "required": 1,
-      "desc": "Path to PDB70 database for template search",
-      "default": "/data/pdb70/pdb70"
-    },
-    {
-      "id": "template_mmcif_dir",
-      "label": "Template mmCIF Directory",
-      "type": "string",
-      "required": 1,
-      "desc": "Path to directory containing PDB mmCIF template files",
-      "default": "/data/pdb_mmcif/mmcif_files"
-    },
-    {
-      "id": "obsolete_pdbs_path",
-      "label": "Obsolete PDBs Path",
-      "type": "string",
-      "required": 1,
-      "desc": "Path to file listing obsolete PDB entries",
-      "default": "/data/pdb_mmcif/obsolete.dat"
     }
   ]
 }
