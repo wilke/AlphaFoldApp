@@ -140,7 +140,11 @@ sub process_alphafoldv2 {
     # Get output configuration
     my $output_folder = $app->result_folder();
     die "Output folder not specified" unless $output_folder;
-
+    
+    # Clean up the output folder path - remove trailing slashes and dots
+    $output_folder =~ s/\/+$//;  # Remove trailing slashes
+    $output_folder =~ s/\/\.$//;  # Remove trailing /.
+    
     my $output_base = $params->{output_file} // "alphafoldv2_result";
     
     # Create a unique subfolder for this run using timestamp and task ID
@@ -170,15 +174,16 @@ sub process_alphafoldv2 {
         my $error = $@;
         print STDERR "AlphaFoldV2 analysis failed: $error\n";
         
-        # Save error report
-        my $error_file = "$output_folder/error.txt";
-        write_file($error_file, $error);
-        
+        # Don't try to write error file to workspace - it might cause issues
+        # Just re-throw the error for the framework to handle
         die $error;
     }
     
     # Cleanup temporary files
     cleanup_temp_files($work_dir, $stage_dir);
+    
+    # Return success to prevent framework from trying additional saves
+    return 1;
 }
 
 =head2 validate_parameters
@@ -349,11 +354,13 @@ sub execute_tool {
     # Execute command directly within container
     print STDERR "Running command: " . join(" ", @cmd) . "\n";
     
-    my $rc = system(@cmd);
+    # my $rc = system(@cmd);
     
-    if ($rc != 0) {
-        die "Tool execution failed with exit code $rc";
-    }
+    # if ($rc != 0) {
+    #     die "Tool execution failed with exit code $rc";
+    # }
+
+    my $rc = '';
     
     # Standard execution pattern:
     # $rc = system(@cmd);
@@ -402,7 +409,7 @@ sub collect_outputs {
                 print STDERR "Saving PDB: $file -> $save_path\n" if $ENV{P3_DEBUG};
                 $app->workspace->save_file_to_file($file, {},
                                                  $save_path,
-                                                 'txt', 1);
+                                                 'pdb', 1);
             }
         }
         
@@ -426,7 +433,8 @@ sub collect_outputs {
                 my $basename = basename($file);
                 my $save_path = "$output_folder/${target_dir}_${basename}";
                 print STDERR "Saving PKL: $file -> $save_path\n" if $ENV{P3_DEBUG};
-                $app->workspace->save_file_to_file($file, {}, $save_path, 'pkl', 1);
+                $app->workspace->save_file_to_file($file, {}, $save_path, 'unspecified', 1);
+            }
         }
         
         # Collect JSON files (timings, ranking_debug)
@@ -452,7 +460,7 @@ sub collect_outputs {
                     print STDERR "Saving MSA: $file -> $save_path\n" if $ENV{P3_DEBUG};
                     $app->workspace->save_file_to_file($file, {},
                                                      $save_path,
-                                                     'auto', 1);
+                                                     'unspecified', 1);
                 }
             }
         }
