@@ -8,12 +8,13 @@ set -e
 
 # Configuration
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SERVICE_SCRIPT="$SCRIPT_DIR/service-scripts/App-AlphaFold.pl"
-APP_SPEC="$SCRIPT_DIR/app_specs/AlphaFold.json"
-TEST_FASTA="$SCRIPT_DIR/test_protein_small.fasta"
-CONTAINER_IMAGE="${ALPHAFOLD_CONTAINER:-$SCRIPT_DIR/images/alphafold_unified_patric.sif}"
-DATABASES_DIR="${ALPHAFOLD_DB_DIR:-$SCRIPT_DIR/databases}"
-OUTPUT_DIR="$SCRIPT_DIR/test_output_$(date +%Y%m%d_%H%M%S)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"  # Parent directory (AlphaFoldApp)
+SERVICE_SCRIPT="$PROJECT_DIR/service-scripts/App-AlphaFold.pl"
+APP_SPEC="$PROJECT_DIR/app_specs/AlphaFold.json"
+TEST_FASTA="$PROJECT_DIR/test_protein_small.fasta"
+CONTAINER_IMAGE="${ALPHAFOLD_CONTAINER:-$PROJECT_DIR/images/alphafold_unified_patric.sif}"
+DATABASES_DIR="${ALPHAFOLD_DB_DIR:-$PROJECT_DIR/databases}"
+OUTPUT_DIR="$PROJECT_DIR/test_output_$(date +%Y%m%d_%H%M%S)"
 
 # Colors for output
 RED='\033[0;31m'

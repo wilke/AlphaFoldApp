@@ -1,0 +1,14 @@
+{
+  "fasta_paths": "test_protein_small.fasta",
+  "output_dir": "/output",
+  "data_dir": "/databases",
+  "model_preset": "monomer",
+  "db_preset": "reduced_dbs",
+  "max_template_date": "2022-01-01",
+  "models_to_relax": "best",
+  "use_gpu_relax": false,
+  "use_precomputed_msas": false,
+  "benchmark": false,
+  "random_seed": null,
+  "output_path": "/awilke@bvbrc/home/AlphaFold/test_run"
+}

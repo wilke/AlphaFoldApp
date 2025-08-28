@@ -66,10 +66,10 @@ perl -c service-scripts/App-AlphaFold.pl
 ./container_setup.sh
 
 # Run test suite
-./test_alphafold.sh --quick
+./tests/test_alphafold.sh --quick
 
 # Or run simple test
-./run_simple_test.sh
+./tests/run_simple_test.sh
 ```
 
 ## Deployment Steps

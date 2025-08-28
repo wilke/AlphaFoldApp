@@ -14,10 +14,14 @@ NC='\033[0m'
 echo -e "${GREEN}[INFO]${NC} Simple AlphaFold Test Runner"
 echo -e "${GREEN}[INFO]${NC} Using known working parameters from recipes/params_monomer_reduced.json"
 
+# Get project directory (parent of tests/)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
 # Create a test parameters file based on the working recipe
-cat > test_params_local.json <<EOF
+cat > "$SCRIPT_DIR/test_params_local.json" <<EOF
 {
-  "fasta_paths": "test_protein_small.fasta",
+  "fasta_paths": "$PROJECT_DIR/test_protein_small.fasta",
   "output_dir": "/output",
   "data_dir": "/databases",
   "model_preset": "monomer",
@@ -32,7 +36,7 @@ cat > test_params_local.json <<EOF
 }
 EOF
 
-echo -e "${GREEN}[INFO]${NC} Created test_params_local.json"
+echo -e "${GREEN}[INFO]${NC} Created $SCRIPT_DIR/test_params_local.json"
 
 # Set environment for debugging
 export P3_DEBUG=1
@@ -53,15 +57,18 @@ else
     echo -e "${YELLOW}[WARNING]${NC} Not running inside container"
 fi
 
+# Change to project directory for execution
+cd "$PROJECT_DIR"
+
 # Run the AlphaFold service
 echo -e "${GREEN}[INFO]${NC} Starting AlphaFold service..."
-echo -e "${GREEN}[INFO]${NC} Command: perl service-scripts/App-AlphaFold.pl test_job app_specs/AlphaFold.json test_params_local.json"
+echo -e "${GREEN}[INFO]${NC} Command: perl service-scripts/App-AlphaFold.pl test_job app_specs/AlphaFold.json tests/test_params_local.json"
 
 # Create a minimal workspace directory
 mkdir -p test_workspace_local
 
 # Run with explicit error handling
-if perl service-scripts/App-AlphaFold.pl test_job app_specs/AlphaFold.json test_params_local.json 2>&1 | tee test_run_local.log; then
+if perl service-scripts/App-AlphaFold.pl test_job app_specs/AlphaFold.json "$SCRIPT_DIR/test_params_local.json" 2>&1 | tee "$SCRIPT_DIR/test_run_local.log"; then
     echo -e "${GREEN}[SUCCESS]${NC} Test completed successfully"
     
     # Check for output files
@@ -75,9 +82,9 @@ else
     
     # Show last few lines of log
     echo -e "${YELLOW}[INFO]${NC} Last 10 lines of log:"
-    tail -10 test_run_local.log
+    tail -10 "$SCRIPT_DIR/test_run_local.log"
     
     exit 1
 fi
 
-echo -e "${GREEN}[INFO]${NC} Test complete. Results in work/ directory and test_run_local.log"
+echo -e "${GREEN}[INFO]${NC} Test complete. Results in work/ directory and tests/test_run_local.log"

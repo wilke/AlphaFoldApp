@@ -1,0 +1,118 @@
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LC_CTYPE = (unset),
+	LC_NUMERIC = (unset),
+	LC_COLLATE = (unset),
+	LC_TIME = (unset),
+	LC_MESSAGES = (unset),
+	LC_MONETARY = (unset),
+	LC_ADDRESS = (unset),
+	LC_IDENTIFICATION = (unset),
+	LC_MEASUREMENT = (unset),
+	LC_PAPER = (unset),
+	LC_TELEPHONE = (unset),
+	LC_NAME = (unset),
+	LANG = "en_US.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+Running process 1510415 as task UNK-lambda13-1510415
+Logging to test_job/UNK-lambda13-1510415
+Running in Singularity image. labels.json:
+{
+	"Author": "DeepMind Technologies Limited / BV-BRC / Patrick Runtime Integration",
+	"CUDA-Version": "12.2.2",
+	"Description": "Unified AlphaFold + Patrick Runtime + BV-BRC Service Container",
+	"JAX-Version": "0.4.26",
+	"Python-Version": "3.11",
+	"Version": "alphafold-2.3.2-ubuntu22.04-patrick-unified",
+	"com.nvidia.cudnn.version": "8.9.6.50",
+	"maintainer": "NVIDIA CORPORATION \u003ccudatools@nvidia.com\u003e",
+	"org.label-schema.build-arch": "amd64",
+	"org.label-schema.build-date": "Friday_15_August_2025_12:22:43_CDT",
+	"org.label-schema.schema-version": "1.0",
+	"org.label-schema.usage": "/.singularity.d/runscript.help",
+	"org.label-schema.usage.apptainer.runscript.help": "/.singularity.d/runscript.help",
+	"org.label-schema.usage.apptainer.version": "1.3.4",
+	"org.label-schema.usage.singularity.deffile.bootstrap": "docker",
+	"org.label-schema.usage.singularity.deffile.from": "nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04",
+	"org.opencontainers.image.ref.name": "ubuntu",
+	"org.opencontainers.image.version": "22.04"
+}
+P3_DATA_CONTAINER=
+P3_DATA_BIND_DESTINATION=
+P3_WORKDIR=
+DATA-VERSION missing
+Executing in interactive terminal
+[2025-08-28 13:47:22] [INFO] Starting AlphaFold analysis
+[2025-08-28 13:47:22] [DEBUG] Application backend directory: /vol/bvbrc/production/application-backend
+[2025-08-28 13:47:22] [DEBUG] Parameters: $VAR1 = {
+          'output_dir' => '/output',
+          'model_preset' => 'monomer',
+          'output_path' => '/awilke@bvbrc/home/AlphaFold/test_run',
+          'fasta_paths' => 'test_protein_small.fasta',
+          'db_preset' => 'reduced_dbs',
+          'data_dir' => '/databases'
+        };
+
+[2025-08-28 13:47:22] [INFO] Parameters validated successfully
+[2025-08-28 13:47:22] [INFO] Creating working directories: /dev_container/modules/AlphafoldApp/work, /dev_container/modules/AlphafoldApp/stage
+[2025-08-28 13:47:22] [DEBUG] About to call app->result_folder()
+[2025-08-28 13:47:22] [DEBUG] output_path parameter: /awilke@bvbrc/home/AlphaFold/test_run
+[2025-08-28 13:47:22] [DEBUG] Output folder: /awilke@bvbrc/home/AlphaFold/test_run/.
+[2025-08-28 13:47:22] [INFO] Output configuration - Base: alphafoldv2_result, Folder: /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415
+[2025-08-28 13:47:22] [INFO] Staging input files
+[2025-08-28 13:47:22] [INFO] Using local FASTA file: test_protein_small.fasta
+[2025-08-28 13:47:22] [INFO] FASTA validation passed: 1 sequence(s), 71 total residues
+[2025-08-28 13:47:22] [DEBUG] Staged inputs: $VAR1 = {
+          'fasta_paths' => 'test_protein_small.fasta'
+        };
+
+[2025-08-28 13:47:22] [DEBUG] AlphaFold execution is disabled for testing purposes
+[2025-08-28 13:47:22] [INFO] Collecting outputs to: /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415
+[2025-08-28 13:47:22] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_0.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_0.pdb
+[2025-08-28 13:47:22] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_1.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_1.pdb
+[2025-08-28 13:47:22] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_2.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_2.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_3.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_3.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_4.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_4.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/relaxed_model_1_pred_0.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_relaxed_model_1_pred_0.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_1_pred_0.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_1_pred_0.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_2_pred_0.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_2_pred_0.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_3_pred_0.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_3_pred_0.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_4_pred_0.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_4_pred_0.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving PDB: /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_5_pred_0.pdb -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_5_pred_0.pdb
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_0.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_0.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_1.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_1.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_2.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_2.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_3.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_3.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/ranked_4.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranked_4.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/relaxed_model_1_pred_0.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_relaxed_model_1_pred_0.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_1_pred_0.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_1_pred_0.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_2_pred_0.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_2_pred_0.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_3_pred_0.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_3_pred_0.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_4_pred_0.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_4_pred_0.cif
+[2025-08-28 13:47:23] [DEBUG] Saving Crystallographic Information File (CIF): /dev_container/modules/AlphafoldApp/work/test_protein_small/unrelaxed_model_5_pred_0.cif -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_unrelaxed_model_5_pred_0.cif
+[2025-08-28 13:47:23] [DEBUG] Saving PKL: /dev_container/modules/AlphafoldApp/work/test_protein_small/features.pkl -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_features.pkl
+[2025-08-28 13:47:23] [DEBUG] Saving PKL: /dev_container/modules/AlphafoldApp/work/test_protein_small/result_model_1_pred_0.pkl -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_result_model_1_pred_0.pkl
+[2025-08-28 13:47:24] [DEBUG] Saving PKL: /dev_container/modules/AlphafoldApp/work/test_protein_small/result_model_2_pred_0.pkl -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_result_model_2_pred_0.pkl
+[2025-08-28 13:47:24] [DEBUG] Saving PKL: /dev_container/modules/AlphafoldApp/work/test_protein_small/result_model_3_pred_0.pkl -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_result_model_3_pred_0.pkl
+[2025-08-28 13:47:24] [DEBUG] Saving PKL: /dev_container/modules/AlphafoldApp/work/test_protein_small/result_model_4_pred_0.pkl -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_result_model_4_pred_0.pkl
+[2025-08-28 13:47:24] [DEBUG] Saving PKL: /dev_container/modules/AlphafoldApp/work/test_protein_small/result_model_5_pred_0.pkl -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_result_model_5_pred_0.pkl
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/confidence_model_1_pred_0.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_confidence_model_1_pred_0.json
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/confidence_model_2_pred_0.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_confidence_model_2_pred_0.json
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/confidence_model_3_pred_0.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_confidence_model_3_pred_0.json
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/confidence_model_4_pred_0.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_confidence_model_4_pred_0.json
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/confidence_model_5_pred_0.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_confidence_model_5_pred_0.json
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/ranking_debug.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_ranking_debug.json
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/relax_metrics.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_relax_metrics.json
+[2025-08-28 13:47:25] [DEBUG] Saving JSON: /dev_container/modules/AlphafoldApp/work/test_protein_small/timings.json -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_timings.json
+[2025-08-28 13:47:25] [DEBUG] Saving Multiple Sequence Alignments (MSA): /dev_container/modules/AlphafoldApp/work/test_protein_small/msas/mgnify_hits.sto -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_msa_mgnify_hits.sto
+[2025-08-28 13:47:25] [DEBUG] Saving Multiple Sequence Alignments (MSA): /dev_container/modules/AlphafoldApp/work/test_protein_small/msas/pdb_hits.hhr -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_msa_pdb_hits.hhr
+[2025-08-28 13:47:25] [DEBUG] Saving Multiple Sequence Alignments (MSA): /dev_container/modules/AlphafoldApp/work/test_protein_small/msas/small_bfd_hits.sto -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_msa_small_bfd_hits.sto
+[2025-08-28 13:47:25] [DEBUG] Saving Multiple Sequence Alignments (MSA): /dev_container/modules/AlphafoldApp/work/test_protein_small/msas/uniref90_hits.sto -> /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415/test_protein_small_msa_uniref90_hits.sto
+[2025-08-28 13:47:25] [INFO] Output collection completed. Files saved to: /awilke@bvbrc/home/AlphaFold/test_run/alphafoldv2_result_20250828_134722_UNK-lambda13-1510415
+[2025-08-28 13:47:25] [INFO] AlphaFold analysis completed successfully
+Error -32603 invoking create:
+_ERROR_Cannot overwrite directory /awilke@bvbrc/home/AlphaFold/test_run/ on save!_ERROR_ at /vol/patric3/production/workspace/deployment/lib/Bio/P3/Workspace/WorkspaceImpl.pm line 186.
+

@@ -154,8 +154,11 @@ databases/
 
 ### 1. Quick Test Script
 ```bash
-#!/bin/bash
-# run_simple_test.sh - Already created in the repository
+# From project root directory:
+./tests/run_simple_test.sh
+
+# Or from tests directory:
+cd tests
 ./run_simple_test.sh
 ```
 
