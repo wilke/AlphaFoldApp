@@ -13,7 +13,7 @@
       "label" : "Workspace Output Path",
       "type" : "wsid",
       "desc" : "Path to the workspace",
-      "required" : 1,
+      "required" : 1
     },
     {
       "id": "fasta_paths",
