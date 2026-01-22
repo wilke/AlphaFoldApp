@@ -1,6 +1,6 @@
 {
   "id": "AlphaFold",
-  "script": "App-AlphaFold.pl",
+  "script": "App-AlphaFold",
   "label": "AlphaFoldV2",
   "description": "AlphaFold predicts a protein's 3D structure from its amino acid sequence using deep learning",
   "default_memory": "64G",
@@ -16,20 +16,20 @@
       "required" : 1
     },
     {
+      "id": "output_file",
+      "label": "File Basename",
+      "required": 0,
+      "default": null,
+	"desc": "Basename for the generated output files.",
+      "type": "string"
+    },
+    {
       "id": "fasta_paths",
       "label": "FASTA Paths",
       "type": "string", 
       "desc": "FASTA file containing protein sequence(s) to predict",
       "required": 1,
       "default": "/input/test_199aa_fixed.fasta"
-    },
-    {
-      "id": "output_dir",
-      "label": "Output Directory",
-      "type": "string",
-      "desc": "Output directory for prediction results",
-      "required": 1,
-      "default": "/output"
     },
     {
       "id": "model_preset",

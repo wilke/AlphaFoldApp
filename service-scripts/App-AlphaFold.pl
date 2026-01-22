@@ -19,6 +19,7 @@ use POSIX qw(strftime);
 use Cwd;
 use strict;
 use warnings;
+use Carp::Always;
 
 use Bio::KBase::AppService::AppConfig qw(application_backend_dir);
 
@@ -26,6 +27,7 @@ use Bio::KBase::AppService::AppConfig qw(application_backend_dir);
 our $VERSION = '1.0.0';
 
 # Logging setup
+$ENV{P3_LOG_LEVEL} //= 'INFO';
 my $log_level = $ENV{P3_LOG_LEVEL} // ($ENV{P3_DEBUG} ? 'DEBUG' : 'INFO');
 
 # Create the application script object
@@ -118,16 +120,13 @@ sub preflight {
     $memory_gb = 256 if $memory_gb > 256;
     $runtime = 86400 if $runtime > 86400; # 24 hour max
     
-    my $time = int($runtime / 60);
-    $time = 1 if $time == 0;
-    
-    print STDERR "Estimated resources: CPU=$cpu, Memory=${memory_gb}G, Runtime=${time}min\n" if $ENV{P3_DEBUG};
+    print STDERR "Estimated resources: CPU=$cpu, Memory=${memory_gb}G, Runtime=${runtime}sec\n" if $ENV{P3_DEBUG};
     
     return {
         cpu => $cpu,
         memory => "${memory_gb}G",
-        runtime => $time,
-        gpu => 1,  # AlphaFold benefits from GPU
+        runtime => $runtime,
+        policy_data => { gpu_count => 1, partition => 'gpu2', constraint => 'H100|H200' },
     };
 }
 
@@ -152,7 +151,7 @@ sub run {
         log_message("DEBUG", "Application backend directory not available");
     }
     
-    log_message("DEBUG", "Parameters: " . Dumper($params)) if $ENV{P3_DEBUG};
+    log_message("DEBUG", "Parameters: " . Dumper($raw_params, $params));
     
     # Validate required parameters
     validate_parameters($params);
@@ -258,7 +257,6 @@ sub validate_parameters {
     # Set defaults for optional parameters
     $params->{model_preset} //= 'monomer';
     $params->{db_preset} //= 'reduced_dbs';
-    $params->{output_dir} //= '/output';
     
     # Validate model preset
     my @valid_models = qw(monomer monomer_ptm monomer_casp14 multimer);
@@ -271,11 +269,14 @@ sub validate_parameters {
     unless (grep { $_ eq $params->{db_preset} } @valid_dbs) {
         die "Invalid db_preset: $params->{db_preset}. Must be one of: " . join(", ", @valid_dbs);
     }
+
+    #
+    # in production, preflight runs don't have the data volumes bound into the container
     
-    # Validate database directory if not using backend default
-    if ($params->{data_dir} && !application_backend_dir()) {
-        die "Database directory not accessible: $params->{data_dir}" unless -d $params->{data_dir};
-    }
+    # # Validate database directory if not using backend default
+    # if ($params->{data_dir} && !application_backend_dir()) {
+    #     die "Database directory not accessible: $params->{data_dir}" unless -d $params->{data_dir};
+    # }
     
     log_message("INFO", "Parameters validated successfully");
 }
@@ -359,7 +360,10 @@ sub execute_tool {
     
     # Get allocated resources
     my $threads = $ENV{P3_ALLOCATED_CPU} // 8;
-    my $use_gpu = $ENV{P3_ALLOCATED_GPU} ? 1 : 0;
+
+    # We arrange to always have GPU
+    #my $use_gpu = $ENV{P3_ALLOCATED_GPU} ? 1 : 0;
+    my $use_gpu = 1;
     
     # We're always in the container in production (BV-BRC runs services in containers)
     # The script is executed inside the alphafold_unified_patric.sif container
@@ -367,7 +371,7 @@ sub execute_tool {
     log_message("INFO", "Running AlphaFold in container environment");
     
     # Build the AlphaFold command
-    my @cmd = ("python", "/app/alphafold/run_alphafold.py");
+    my @cmd = ("/opt/conda-alphafold/bin/python", "/app/alphafold/run_alphafold.py");
     # Add FASTA input path
     if ($staged_inputs->{fasta_paths}) {
         push @cmd, "--fasta_paths", $staged_inputs->{fasta_paths};
@@ -396,7 +400,6 @@ sub execute_tool {
     } elsif ($db_preset eq "reduced_dbs") {
         push @cmd, "--small_bfd_database_path", "$db_path/small_bfd/bfd-first_non_consensus_sequences.fasta";
     }
-    
     # Database paths based on model_preset  
     my $model_preset = $params->{model_preset} // "monomer";
     if ($model_preset eq "multimer") {
@@ -694,52 +697,42 @@ Determines the appropriate database directory based on configuration.
 
 sub get_database_directory {
     my($params) = @_;
-    
+
     # Priority order:
-    # 1. Check application_backend_dir() if it returns a valid path
-    # 2. Use /databases as default (standard container mount point)
-    # 3. Explicit parameter (override if provided)
-    # 4. Environment variable
-    # 5. Other fallback locations
-    
-    # Try to get backend directory
-    my $backend_dir = eval { application_backend_dir() };
-    
-    # Check if backend_dir is valid and databases exist there
-    if ($backend_dir && $backend_dir ne '' && -d "$backend_dir/databases") {
-        log_message("INFO", "Using backend database directory: $backend_dir/databases");
-        return "$backend_dir/databases";
-    }
-    
-    # Default container mount point - check this next
-    if (-d "/databases") {
-        log_message("INFO", "Using container database directory: /databases");
-        return "/databases";
-    }
-    
-    # Check explicit parameter
+    # 1. Explicit parameter (data_dir)
+    # 2. Environment variable (ALPHAFOLD_DB_DIR)
+    # 3. /local_databases/alphafold/databases (default local location)
+    # 4. application_backend_dir()/databases
+
+    # Check explicit parameter first (highest priority)
     if ($params->{data_dir} && -d $params->{data_dir}) {
         log_message("INFO", "Using database directory from parameters: $params->{data_dir}");
         return $params->{data_dir};
     }
-    
+
     # Check environment variable
     if ($ENV{ALPHAFOLD_DB_DIR} && -d $ENV{ALPHAFOLD_DB_DIR}) {
         log_message("INFO", "Using database directory from environment: $ENV{ALPHAFOLD_DB_DIR}");
         return $ENV{ALPHAFOLD_DB_DIR};
     }
-    
-    # Other fallback locations
-    my @fallback_locations = ('/alphafold/databases', './databases');
-    for my $loc (@fallback_locations) {
-        if (-d $loc) {
-            log_message("INFO", "Using fallback database directory: $loc");
-            return $loc;
-        }
+
+    # Default local location
+    if (-d "/local_databases/alphafold/databases") {
+        log_message("INFO", "Using local database directory: /local_databases/alphafold/databases");
+        return "/local_databases/alphafold/databases";
     }
-    
-    die "Cannot find AlphaFold database directory. Please ensure databases are mounted at /databases " .
-        "or set data_dir parameter to the correct location.";
+
+    # Try to get backend directory
+    my $backend_dir = eval { application_backend_dir() };
+
+    # Check if backend_dir is valid and databases exist there
+    if ($backend_dir && $backend_dir ne '' && -d "$backend_dir/databases") {
+        log_message("INFO", "Using backend database directory: $backend_dir/databases");
+        return "$backend_dir/databases";
+    }
+
+    die "Cannot find AlphaFold database directory. Please set data_dir parameter, " .
+        "ALPHAFOLD_DB_DIR environment variable, or ensure databases are at /local_databases/alphafold/databases.";
 }
 
 =head2 validate_fasta
